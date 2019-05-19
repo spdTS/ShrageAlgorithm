@@ -1,0 +1,3 @@
+/Users/seba/Desktop/Programowanie/Shrage/cmake-build-debug/CMakeFiles/rebuild_cache.dir
+/Users/seba/Desktop/Programowanie/Shrage/cmake-build-debug/CMakeFiles/edit_cache.dir
+/Users/seba/Desktop/Programowanie/Shrage/cmake-build-debug/CMakeFiles/Shrage.dir
