@@ -97,23 +97,24 @@ void SortQj(vector<Job> tab) {
 }
 
 
-int ShrageAlgorithm(vector<Job> tab) {
+int ShrageAlgorithm(vector<Job> tab,int *tabhelp) {
     int time = 0;
     int Cmax = 0;
     int number=0;
+    int i=0;
     vector<Job> helptab,tab1;
     vector<Job> ro;
 
     while (!helptab.empty() || !tab.empty()) {
         auto itw=tab.begin();
-        while (!tab.empty() && itw->returnRj() < time) {
+        while (!tab.empty() && itw->returnRj() <= time) {
             helptab.push_back(*itw);
             tab.erase(tab.begin());
             itw=tab.begin();
         }
         if (helptab.empty()) {
             auto itpom=tab.begin();
-            time = time + itpom->returnRj();
+            time =  itpom->returnRj();
 
         } else {
 
@@ -121,49 +122,53 @@ int ShrageAlgorithm(vector<Job> tab) {
             auto it = helptab.begin();
             time = time + it->returnPj();
             ro.push_back(*it);
-            //number=it->getnumberproces();
+
            Cmax=max(Cmax,time+it->returnQj());
+           tabhelp[i]=it->getnumberproces();
             helptab.erase(helptab.begin());
+            i++;
         }
 
 
     }
-
+   // cout<<"Time"<<time<<endl;
     auto itpom2=ro.begin();
     sort(ro.begin(), ro.end(),[] (const Job &a,const Job &b){return a.qj > b.qj;});
 
     return Cmax;
 }
-int ShragePMTAlgorithm(vector<Job> tab) {
+int ShragePMTAlgorithm(vector<Job> tab,int *tabhelp1) {
     int time = 0;
     int Cmax = 0;
+    int i=0;
     vector<Job> helptab,tab1;
 
 
     while (!helptab.empty() || !tab.empty()) {
         auto itw=tab.begin();
-        while (!tab.empty() && itw->returnRj() < time) {
+        while (!tab.empty() && itw->returnRj() <= time) {
             helptab.push_back(*itw);
 
-            itw=tab.begin();
 
-            if(itw->returnQj() > itw++->returnQj())
+            auto itw2=(itw+1);
+            if(itw->returnQj() > (itw2)->returnQj())
             {
-                itw->rj=time-itw->returnRj();
+                (itw2)->pj=time-(itw->returnRj());
                 time=itw->returnRj();
 
-                if(itw++->returnPj() >0)
+                if((itw2)->returnPj() >0)
                 {
-                    helptab.push_back(*++itw);
+                    helptab.push_back(*itw2);
                 }
             }
 
             tab.erase(tab.begin());
+            itw=tab.begin();
         }
 
         if (helptab.empty()) {
             auto itpom=tab.begin();
-            time = time + itpom->returnRj();
+            time = itpom->returnRj();
 
         } else {
 
@@ -171,6 +176,8 @@ int ShragePMTAlgorithm(vector<Job> tab) {
             auto it = helptab.begin();
             time = time + it->returnPj();
             Cmax=max(Cmax,time+it->returnQj());
+            tabhelp1[i]=it->getnumberproces();
+            i++;
             helptab.erase(helptab.begin());
         }
 
@@ -187,6 +194,8 @@ int main() {
     int nm, np, p1[100][100];
     ifstream data("data.txt");
     data >> np >> nm;
+    int tabhelp1[np];
+    int tabhelp2[np];
 
 
     for (int i = 1; i < np + 1; i++) {
@@ -211,8 +220,8 @@ int main() {
 
     sort(tab.begin(), tab.end(),[] (const Job &a,const Job &b){return a.rj < b.rj;});
 
-    cout << "Wynik algorytmu to: " << ShrageAlgorithm(tab) << endl;
-    cout << "Wynik algorytmu to: " << ShragePMTAlgorithm(tab) << endl;
+    cout << "Wynik algorytmu to: " << ShrageAlgorithm(tab,tabhelp1) << endl;
+    cout << "Wynik algorytmuPMTA to: " << ShragePMTAlgorithm(tab,tabhelp2) << endl;
 
     return 0;
 }
