@@ -19,6 +19,7 @@ public:
     int rj = 0; //Czas przygotowania
     int pj = 0; //Czas wykonania
     int qj = 0; //Czas dostarczen
+    int Cq=0;
     /*Job(int R, int P, int Q)
     {
         this->R = R;
@@ -103,13 +104,14 @@ void SortQj(vector<Job> tab) {
 }
 
 
-int ShrageAlgorithm(vector<Job> tab,int *tabhelp) {
+int ShrageAlgorithm(vector<Job> &tab1) {
     int time = 0;
     int Cmax = 0;
     int number=0;
     int i=0;
-    vector<Job> helptab,tab1;
-    vector<Job> ro;
+    vector<Job>tab=tab1;
+    vector<Job> permutation;
+    vector<Job> helptab;
 
     while (!helptab.empty() || !tab.empty()) {
         auto itw=tab.begin();
@@ -127,10 +129,10 @@ int ShrageAlgorithm(vector<Job> tab,int *tabhelp) {
             sort(helptab.begin(), helptab.end(),[] (const Job &a,const Job &b){return a.qj > b.qj;});
             auto it = helptab.begin();
             time += it->returnPj();
-            ro.push_back(*it);
-
-           Cmax=max(Cmax,time+it->returnQj());
-           tabhelp[i]=it->getnumberproces();
+            permutation.push_back(*it);
+            permutation[permutation.size()-1].Cq=time + it->returnQj();
+            Cmax=max(Cmax,time+it->returnQj());
+//            tabhelp[i]=it->getnumberproces();
             helptab.erase(helptab.begin());
             i++;
         }
@@ -138,15 +140,12 @@ int ShrageAlgorithm(vector<Job> tab,int *tabhelp) {
 
     }
    // cout<<"Time"<<time<<endl;
-    auto itpom2=ro.begin();
-    sort(ro.begin(), ro.end(),[] (const Job &a,const Job &b){return a.qj > b.qj;});
+    tab1=permutation;
 
     return Cmax;
 }
 
-
-
-int Schrage_pmtn(vector<Job> tab,int *tabhelp1)
+int Schrage_pmtn(vector<Job> tab)
 {
     int Cmax = 0;
     std::vector<Job> ready;
@@ -217,30 +216,157 @@ int Schrage_pmtn(vector<Job> tab,int *tabhelp1)
         }
 
     }
-   // carus.Cmax_Schrage_pmtn=Cmax;
-    //cout << "\nCmax z przerwaniami: " << Cmax << std::endl;
+
     return Cmax;
 }
-/*
-int bMax(vector<Job> tab,int Cmax){
-    for(int i=0;i<tab.size()-1;i++)
-    {
-        if(tab[i] == Cmax && )
-    }
-}*/
-int Carlier(vector<Job> tab, int *tabhelp, int np)
+
+int find_max(int Cmax, int Q)
 {
-    int U,UB,LB;
+    return Cmax > Q ? Cmax : Q;
+}
+int find_max(int a, int b,int c)
+{
+    int max=a;
+    if(b>max)
+        max=b;
+    if(c>max)
+        max=c;
+    return max;
+}
+
+int find_min(int a, int b){
+    return a > b ? b : a;
+}
+
+int find_b(int np,int Cmax_Schrage, vector<Job> PI){
+    int b=0;
+    for(int i=np;i>0;i--){
+        if(Cmax_Schrage==PI[i].Cq){
+            b=i;
+            break;
+        }
+    }
+    return b;
+}
+
+int find_a(int b, vector<Job> PI,int Cmax_Schrage){
+
+    int suma = 0;
+    int a;
+    for(a = 0; a < b; a++)
+    {
+        suma = 0;
+        for (int i = a; i <= b; i++)
+        {
+            suma += PI[i].returnPj();
+        }
+
+        if (Cmax_Schrage == (PI[a].returnRj() + suma + PI[b].returnQj()))
+        {
+            return a;
+        }
+
+    }
+
+    return a;
+}
+
+int find_c(int b, int a,  vector<Job> PI) {
+    int c = - 1;
+
+    for ( int i = b ; i >= a ; i-- ) {
+        if (PI[i].returnQj() < PI[b].returnQj()) {
+            c = i;
+            break;
+        }
+    }
+
+    return c;
+}
+
+
+
+int Carlier(vector<Job> tab, int np,int UB)
+{
+    int U,LB;
     int tabhelp1[np];
-    U=ShrageAlgorithm(tab,tabhelp);
+    U=ShrageAlgorithm(tab);
 
     if(U < UB){
         UB=U;
-        tabhelp=tabhelp1;
+    }
+    int b=find_b(np,U,tab);
+    int a=find_a(b,tab,U);
+    int c=find_c(b,a,tab);
+  //  cout<<"B: "<<find_b(np,U,tab);
+ //   cout<<"A: "<<find_a(b,tab,U);
+ //   cout<<"C: "<<find_c(b,  a,  tab);
+    if(c == -1)
+    {
+        return UB;
     }
 
+    int rPrim=0;
+    int pPrim=0;
+    int qPrim=0;
 
+    for(int i=c+1; i<=b; i++){
+        rPrim=tab[i].returnRj();
+        pPrim+=tab[i].returnPj();
+        qPrim=tab[i].returnQj();
+
+    }
+    int hPrim=0;
+    hPrim=rPrim + pPrim + qPrim;
+   // cout<<"r': "<<rPrim<<" ";
+  //  cout<<"p': "<<pPrim<<" ";
+   // cout<<"q': "<<qPrim<<" ";
+   // cout<<"h': "<<hPrim<<endl<<endl;
+
+    int rememberR=tab[c].returnRj();
+    int whereR=c;
+    tab[c].SaveRj(find_max(tab[c].returnRj() , rPrim + pPrim));
+
+    LB = Schrage_pmtn(tab);
+    LB = find_max(hPrim,LB);
+
+
+    if(LB < UB){
+        UB=Carlier(tab,np,UB);
+    }
+
+    for (int i = 0; i < np; i++)
+    {
+        if(whereR == tab[i].getnumberproces()){
+            tab[i].SaveRj(rememberR);
+            break;
+        }
+
+    }
+    int rememberQ=tab[c].returnQj();
+    int whereQ=c;
+    tab[c].SaveQj(find_max(tab[c].returnQj() , qPrim + pPrim));
+
+    LB = Schrage_pmtn(tab);
+    LB = find_min(hPrim,LB);
+
+    if(LB < UB) {
+        UB=Carlier(tab,np,LB);
+    }
+    for (int i = 0; i < np; i++)
+    {
+        if(whereQ == tab[i].getnumberproces()){
+            tab[i].SaveQj(rememberQ);
+            break;
+        }
+
+    }
+
+    U=LB;
+    return U;
 }
+
+
 int main() {
     Job object;
     vector<Job> tab;
@@ -277,8 +403,10 @@ int main() {
     */
     sort(tab.begin(), tab.end(),[] (const Job &a,const Job &b){return a.rj < b.rj;});
 
-    cout << "Wynik algorytmu to: " << ShrageAlgorithm(tab,tabhelp1) << endl;
-    cout << "Wynik algorytmuPMTA to: " << Schrage_pmtn(tab,tabhelp2) << endl;
-
+   // cout << "Wynik algorytmu to: " << ShrageAlgorithm(tab) << endl;
+   // cout << "Wynik algorytmuPMTA to: " << ShragePMTAlgorithm(tab,tabhelp2) << endl;
+   // cout << "Wynik algorytmuPMTA to: " << Schrage_pmtn(tab) << endl;
+    int UB=9999;
+    cout<<"Wynik Carliera to: " <<Carlier(tab,  np,UB)<<endl;
     return 0;
 }
